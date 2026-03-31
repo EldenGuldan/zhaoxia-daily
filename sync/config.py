@@ -1,9 +1,9 @@
 # 飞书同步配置
 
 FEISHU_CONFIG = {
-    "app_token": "YOUR_APP_TOKEN_HERE",
-    "table_id": "YOUR_TABLE_ID_HERE",
-    "view_id": None,
+    "app_token": "NgMCbk9aGaqrG9sgecmcjIgqnMd",
+    "table_id": "tblEAuimN2Ie9789",
+    "view_id": "vewGazu8y4",
 }
 
 # 字段映射
