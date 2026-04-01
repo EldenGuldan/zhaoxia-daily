@@ -1,4 +1,4 @@
-import { NewsItem } from '@/lib/types'
+import { NewsItem } from '../lib/types'
 import { format } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 import { ExternalLink, ThumbsUp, Eye, MessageCircle, Tag } from 'lucide-react'
