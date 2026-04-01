@@ -244,7 +244,14 @@ class ProductHuntCrawler:
                     for link in links:
                         href = link.get('href', '')
                         if 'utm_campaign=producthunt' in href or '/products/' in href:
-                            product_url = href
+                            # 清理 URL，去掉 tracking 参数，并将 /products/ 改为 /posts/
+                            from urllib.parse import urlparse, urlunparse
+                            parsed = urlparse(href)
+                            # 将 /products/ 路径改为 /posts/ 路径
+                            path = parsed.path.replace('/products/', '/posts/')
+                            # 只保留 scheme, netloc, path
+                            clean_url = urlunparse((parsed.scheme, parsed.netloc, path, '', '', ''))
+                            product_url = clean_url
                             break
                     
                     # 使用找到的直接链接，否则使用 RSS 链接
