@@ -4,10 +4,10 @@ import { useState } from 'react'
 import { Sparkles, Database, Calendar, Filter, ExternalLink } from 'lucide-react'
 import { format } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
-import NewsCard from './components/NewsCard'
-import DataTable from './components/DataTable'
-import { NewsItem, ViewMode } from './lib/types'
-import { mockData } from './lib/mockData'
+import NewsCard from '../components/NewsCard'
+import DataTable from '../components/DataTable'
+import { NewsItem, ViewMode } from '../lib/types'
+import { mockData } from '../lib/mockData'
 
 export default function Home() {
   const [viewMode, setViewMode] = useState<ViewMode>('community')
