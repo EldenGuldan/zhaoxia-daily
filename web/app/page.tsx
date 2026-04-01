@@ -1,18 +1,39 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Sparkles, Database, Calendar, Filter, ExternalLink } from 'lucide-react'
 import { format } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 import NewsCard from '../components/NewsCard'
 import DataTable from '../components/DataTable'
 import { NewsItem, ViewMode } from '../lib/types'
-import { mockData } from '../lib/mockData'
+
+interface NewsData {
+  updated_at: string
+  count: number
+  items: NewsItem[]
+}
 
 export default function Home() {
   const [viewMode, setViewMode] = useState<ViewMode>('community')
   const [filter, setFilter] = useState<string>('all')
-  const data: NewsItem[] = mockData
+  const [data, setData] = useState<NewsItem[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    // 加载真实数据
+    fetch('/data/news.json')
+      .then(res => res.json())
+      .then((newsData: NewsData) => {
+        setData(newsData.items || [])
+        setLoading(false)
+      })
+      .catch(err => {
+        console.error('Failed to load data:', err)
+        setData([])
+        setLoading(false)
+      })
+  }, [])
 
   const filteredData = filter === 'all' 
     ? data 
@@ -25,6 +46,14 @@ export default function Home() {
     tool: { label: '🛠️ 工具', color: 'bg-purple-500' },
     news: { label: '📰 新闻', color: 'bg-blue-500' },
     trend: { label: '🔥 热点', color: 'bg-red-500' },
+  }
+
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+        <div className="text-purple-300">加载中...</div>
+      </main>
+    )
   }
 
   return (
@@ -121,7 +150,7 @@ export default function Home() {
           <StatCard label="今日资讯" value={data.length} color="purple" />
           <StatCard label="AI 工具" value={data.filter(i => i.category === 'tool').length} color="fuchsia" />
           <StatCard label="行业新闻" value={data.filter(i => i.category === 'news').length} color="blue" />
-          <StatCard label="平均互动" value={`${Math.round(data.reduce((a, b) => a + b.engagement, 0) / data.length)}+`} color="pink" />
+          <StatCard label="平均互动" value={data.length > 0 ? `${Math.round(data.reduce((a, b) => a + b.engagement, 0) / data.length)}+` : '0'} color="pink" />
         </div>
 
         {/* Content */}

@@ -226,17 +226,41 @@ class ProductHuntCrawler:
                               ['ai', 'gpt', 'llm', 'machine learning', 'neural', 'openai', 'claude']):
                         continue
                     
+                    # 获取正确的链接 - 使用 entry.id 通常是完整帖子链接
+                    # 或者从链接中提取 slug 构建正确链接
+                    url = entry.get('id', entry.link)
+                    # 如果 id 不是 URL，使用 link 并转换为 posts 链接
+                    if not url.startswith('http'):
+                        # 从 link 中提取产品名构建帖子链接
+                        url = entry.link
+                        # Product Hunt 的链接通常是 /products/{name}，需要改为 /posts/{name}
+                        if '/products/' in url:
+                            url = url.replace('/products/', '/posts/')
+                    
+                    # 从 summary 中提取实际的产品 URL（如果有）
+                    soup = BeautifulSoup(entry.get('summary', ''), 'html.parser')
+                    links = soup.find_all('a')
+                    product_url = None
+                    for link in links:
+                        href = link.get('href', '')
+                        if 'utm_campaign=producthunt' in href or '/products/' in href:
+                            product_url = href
+                            break
+                    
+                    # 使用找到的直接链接，否则使用 RSS 链接
+                    final_url = product_url if product_url else url
+                    
                     item = NewsItem(
-                        id=f"ph_{hash(entry.link)}",
+                        id=f"ph_{hash(entry.link) % 10000000000}",
                         title=entry.title,
                         summary=entry.get('summary', '')[:200],
-                        url=entry.link,
+                        url=final_url,
                         source="Product Hunt",
                         source_type="产品发布",
                         category="tool",
                         tags=["AI产品", "新品"],
                         published_at=datetime.now().isoformat(),
-                        likes=100,  # Product Hunt 需要单独获取 votes
+                        likes=100,
                         views=1000,
                         comments=20,
                         engagement=120
