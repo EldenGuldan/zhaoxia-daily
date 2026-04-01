@@ -59,23 +59,22 @@ RSS_SOURCES = [
         "source_type": "学术论文",
         "tags": ["AI论文", "研究"]
     },
-    # Reddit Machine Learning
+    # 中文 AI 媒体
     {
-        "name": "Reddit r/MachineLearning", 
-        "url": "https://www.reddit.com/r/MachineLearning/.rss",
+        "name": "机器之心",
+        "url": "https://www.jiqizhixin.com/rss",
         "category": "news",
-        "source_type": "社区讨论",
-        "tags": ["机器学习", "社区"]
+        "source_type": "中文媒体",
+        "tags": ["AI新闻", "中文"]
     },
-    # Hacker News
     {
-        "name": "Hacker News",
-        "url": "https://news.ycombinator.com/rss",
-        "category": "news", 
-        "source_type": "科技新闻",
-        "tags": ["科技", "创业"]
+        "name": "量子位",
+        "url": "https://www.qbitai.com/feed",
+        "category": "news",
+        "source_type": "中文媒体",
+        "tags": ["AI新闻", "中文"]
     },
-    # TechCrunch AI
+    # 国际科技媒体
     {
         "name": "TechCrunch AI",
         "url": "https://techcrunch.com/category/artificial-intelligence/feed/",
@@ -83,15 +82,6 @@ RSS_SOURCES = [
         "source_type": "科技媒体",
         "tags": ["AI新闻", "科技"]
     },
-    # The Verge AI
-    {
-        "name": "The Verge AI",
-        "url": "https://www.theverge.com/ai-artificial-intelligence/rss/index.xml",
-        "category": "news",
-        "source_type": "科技媒体",
-        "tags": ["AI新闻", "消费科技"]
-    },
-    # MIT Technology Review
     {
         "name": "MIT Technology Review",
         "url": "https://www.technologyreview.com/feed/",
@@ -99,7 +89,58 @@ RSS_SOURCES = [
         "source_type": "科技媒体",
         "tags": ["科技", "研究"]
     },
-    # Product Hunt (保留但减少)
+    {
+        "name": "Wired AI",
+        "url": "https://www.wired.com/tag/artificial-intelligence/feed/",
+        "category": "news",
+        "source_type": "科技媒体",
+        "tags": ["AI新闻", "科技趋势"]
+    },
+    {
+        "name": "VentureBeat AI",
+        "url": "https://venturebeat.com/category/ai/feed/",
+        "category": "news",
+        "source_type": "科技媒体",
+        "tags": ["AI新闻", "创投"]
+    },
+    # AI 公司官方博客
+    {
+        "name": "OpenAI Blog",
+        "url": "https://openai.com/blog/rss.xml",
+        "category": "news",
+        "source_type": "官方博客",
+        "tags": ["OpenAI", "大模型"]
+    },
+    {
+        "name": "Google AI Blog",
+        "url": "http://ai.googleblog.com/feeds/posts/default",
+        "category": "news",
+        "source_type": "官方博客",
+        "tags": ["Google", "AI研究"]
+    },
+    {
+        "name": "Anthropic News",
+        "url": "https://www.anthropic.com/news/rss.xml",
+        "category": "news",
+        "source_type": "官方博客",
+        "tags": ["Claude", "Anthropic"]
+    },
+    # 开发者社区
+    {
+        "name": "Hacker News",
+        "url": "https://hnrss.org/newest?q=ai+OR+llm+OR+openai+OR+claude",
+        "category": "trend",
+        "source_type": "开发者社区",
+        "tags": ["开发者", "技术"]
+    },
+    {
+        "name": "Dev.to AI",
+        "url": "https://dev.to/feed/tag/ai",
+        "category": "news",
+        "source_type": "开发者社区",
+        "tags": ["开发者", "AI应用"]
+    },
+    # Product Hunt (少量)
     {
         "name": "Product Hunt",
         "url": "https://www.producthunt.com/feed",
