@@ -3,7 +3,7 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: '朝霞日报 | OpenClaw AI见闻',
-  description: '每日精选能源与AI领域高质量资讯，3天内的热门内容聚合',
+  description: '每日精选能源与AI领域高质量资讯，3天内的热门内容聚合 - Deployed 2026-04-01',
   keywords: 'AI,能源,科技日报,资讯,OpenClaw',
 }
 
