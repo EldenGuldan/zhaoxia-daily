@@ -56,7 +56,8 @@ RSS_SOURCES = [
         "url": "http://export.arxiv.org/api/query?search_query=cat:cs.AI+OR+cat:cs.CL+OR+cat:cs.LG&sortBy=submittedDate&sortOrder=descending&max_results=10",
         "category": "news",
         "source_type": "学术论文",
-        "tags": ["AI论文", "研究"]
+        "tags": ["AI论文", "研究"],
+        "weight": 300
     },
     # 中文 AI 媒体
     {
@@ -64,14 +65,16 @@ RSS_SOURCES = [
         "url": "https://www.jiqizhixin.com/rss",
         "category": "news",
         "source_type": "中文媒体",
-        "tags": ["AI新闻", "中文"]
+        "tags": ["AI新闻", "中文"],
+        "weight": 800
     },
     {
         "name": "量子位",
         "url": "https://www.qbitai.com/feed",
         "category": "news",
         "source_type": "中文媒体",
-        "tags": ["AI新闻", "中文"]
+        "tags": ["AI新闻", "中文"],
+        "weight": 800
     },
     # 国际科技媒体
     {
@@ -79,28 +82,32 @@ RSS_SOURCES = [
         "url": "https://techcrunch.com/category/artificial-intelligence/feed/",
         "category": "news",
         "source_type": "科技媒体",
-        "tags": ["AI新闻", "科技"]
+        "tags": ["AI新闻", "科技"],
+        "weight": 1200
     },
     {
         "name": "MIT Technology Review",
         "url": "https://www.technologyreview.com/feed/",
         "category": "news",
         "source_type": "科技媒体",
-        "tags": ["科技", "研究"]
+        "tags": ["科技", "研究"],
+        "weight": 1000
     },
     {
         "name": "Wired AI",
         "url": "https://www.wired.com/tag/artificial-intelligence/feed/",
         "category": "news",
         "source_type": "科技媒体",
-        "tags": ["AI新闻", "科技趋势"]
+        "tags": ["AI新闻", "科技趋势"],
+        "weight": 900
     },
     {
         "name": "VentureBeat AI",
         "url": "https://venturebeat.com/category/ai/feed/",
         "category": "news",
         "source_type": "科技媒体",
-        "tags": ["AI新闻", "创投"]
+        "tags": ["AI新闻", "创投"],
+        "weight": 700
     },
     # AI 公司官方博客
     {
@@ -108,21 +115,24 @@ RSS_SOURCES = [
         "url": "https://openai.com/blog/rss.xml",
         "category": "news",
         "source_type": "官方博客",
-        "tags": ["OpenAI", "大模型"]
+        "tags": ["OpenAI", "大模型"],
+        "weight": 1500
     },
     {
         "name": "Google AI Blog",
         "url": "http://ai.googleblog.com/feeds/posts/default",
         "category": "news",
         "source_type": "官方博客",
-        "tags": ["Google", "AI研究"]
+        "tags": ["Google", "AI研究"],
+        "weight": 1400
     },
     {
         "name": "Anthropic News",
         "url": "https://www.anthropic.com/news/rss.xml",
         "category": "news",
         "source_type": "官方博客",
-        "tags": ["Claude", "Anthropic"]
+        "tags": ["Claude", "Anthropic"],
+        "weight": 1400
     },
     # 开发者社区
     {
@@ -130,14 +140,16 @@ RSS_SOURCES = [
         "url": "https://hnrss.org/newest?q=ai+OR+llm+OR+openai+OR+claude",
         "category": "trend",
         "source_type": "开发者社区",
-        "tags": ["开发者", "技术"]
+        "tags": ["开发者", "技术"],
+        "weight": 600
     },
     {
         "name": "Dev.to AI",
         "url": "https://dev.to/feed/tag/ai",
         "category": "news",
         "source_type": "开发者社区",
-        "tags": ["开发者", "AI应用"]
+        "tags": ["开发者", "AI应用"],
+        "weight": 400
     },
     # Product Hunt (少量)
     {
@@ -145,7 +157,8 @@ RSS_SOURCES = [
         "url": "https://www.producthunt.com/feed",
         "category": "tool",
         "source_type": "产品发布",
-        "tags": ["AI产品"]
+        "tags": ["AI产品"],
+        "weight": 500
     },
 ]
 
@@ -199,7 +212,7 @@ class RSSCrawler:
                             tags=source["tags"],
                             published_at=pub_date,
                             likes=50,
-                            views=500,
+                            views=source.get("weight", 500),
                             comments=10
                         )
                         items.append(item)
