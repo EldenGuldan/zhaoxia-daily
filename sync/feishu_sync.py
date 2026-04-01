@@ -1,5 +1,6 @@
+#!/usr/bin/env python3
 """
-飞书多维表格同步脚本 - 实际可用版本
+飞书多维表格同步脚本 - 使用 openclaw 工具
 将采集的新闻数据同步到飞书 Bitable
 """
 
@@ -10,11 +11,49 @@ import subprocess
 from datetime import datetime
 from typing import List, Dict, Any
 
-# 添加父目录到路径
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# 飞书配置
+FEISHU_CONFIG = {
+    "app_token": "NgMCbk9aGaqrG9sgecmcjIgqnMd",
+    "table_id": "tblEAuimN2Ie9789",
+    "view_id": "vewGazu8y4",
+}
 
-from crawler.main import NewsItem
-from sync.config import FEISHU_CONFIG, FIELD_MAPPING, CATEGORY_OPTIONS
+# 类别选项映射
+CATEGORY_OPTIONS = {
+    "tool": "🛠️ AI工具",
+    "news": "📰 行业新闻",
+    "trend": "🔥 热点话题",
+}
+
+# 来源类型映射（标准化）
+SOURCE_TYPE_MAP = {
+    "官方博客": "官方博客",
+    "开源社区": "开源社区",
+    "开源项目": "开源社区",
+    "产品发布": "产品发布",
+    "社交媒体": "社交媒体",
+    "科技媒体": "科技媒体",
+    "AI社区": "AI社区",
+    "企业新闻": "官方博客",
+}
+
+
+class NewsItem:
+    """新闻数据项"""
+    def __init__(self, **kwargs):
+        self.id = kwargs.get('id', '')
+        self.title = kwargs.get('title', '')
+        self.summary = kwargs.get('summary', '')
+        self.url = kwargs.get('url', '')
+        self.source = kwargs.get('source', '')
+        self.source_type = kwargs.get('source_type', 'AI社区')
+        self.category = kwargs.get('category', 'tool')
+        self.tags = kwargs.get('tags', [])
+        self.published_at = kwargs.get('published_at', '')
+        self.likes = kwargs.get('likes', 0)
+        self.views = kwargs.get('views', 0)
+        self.comments = kwargs.get('comments', 0)
+        self.engagement = kwargs.get('engagement', 0)
 
 
 class FeishuSync:
@@ -30,6 +69,21 @@ class FeishuSync:
         # 类别映射
         category_display = CATEGORY_OPTIONS.get(item.category, item.category)
         
+        # 来源类型标准化
+        source_type = SOURCE_TYPE_MAP.get(item.source_type, "AI社区")
+        
+        # 标签过滤（只保留预定义的标签）
+        valid_tags = ["大模型", "AI绘画", "AI编程", "视频生成", "AI音乐", 
+                      "AI搜索", "开源模型", "Agent", "新品发布", "社区热点"]
+        filtered_tags = [tag for tag in item.tags if tag in valid_tags]
+        
+        # 转换时间戳（毫秒）
+        try:
+            published_at = item.published_at.replace('Z', '+00:00') if 'Z' in item.published_at else item.published_at
+            timestamp_ms = int(datetime.fromisoformat(published_at).timestamp() * 1000)
+        except:
+            timestamp_ms = int(datetime.now().timestamp() * 1000)
+        
         return {
             "标题": item.title,
             "摘要": item.summary,
@@ -38,47 +92,26 @@ class FeishuSync:
                 "link": item.url
             },
             "来源": item.source,
-            "来源类型": item.source_type,
+            "来源类型": source_type,
             "类别": category_display,
-            "标签": item.tags,
-            "发布时间": int(datetime.fromisoformat(item.published_at.replace('Z', '+00:00')).timestamp() * 1000),
+            "标签": filtered_tags,
+            "发布时间": timestamp_ms,
             "点赞数": item.likes,
             "阅读量": item.views,
             "评论数": item.comments,
-            "互动量": item.engagement,
         }
     
-    def _call_feishu_tool(self, action: str, params: Dict) -> Dict:
-        """调用飞书工具"""
-        # 构建 openclaw 命令
-        cmd = ["openclaw", "feishu_bitable_app_table_record", action]
-        
-        for key, value in params.items():
-            if isinstance(value, list):
-                cmd.extend([f"--{key}", json.dumps(value)])
-            elif isinstance(value, dict):
-                cmd.extend([f"--{key}", json.dumps(value)])
-            else:
-                cmd.extend([f"--{key}", str(value)])
-        
-        try:
-            result = subprocess.run(cmd, capture_output=True, text=True)
-            if result.returncode == 0:
-                return json.loads(result.stdout)
-            else:
-                print(f"Error: {result.stderr}")
-                return {}
-        except Exception as e:
-            print(f"Command error: {e}")
-            return {}
-    
     def batch_sync(self, items: List[NewsItem]):
-        """批量同步（推荐）"""
+        """批量同步"""
+        if not items:
+            print("没有数据需要同步")
+            return 0
+        
         print(f"批量同步 {len(items)} 条记录到飞书表格...")
         print(f"App Token: {self.app_token[:10]}...")
         print(f"Table ID: {self.table_id}")
         
-        # 分批处理，每批 500 条
+        # 分批处理，每批 500 条（API 限制）
         batch_size = 500
         total_success = 0
         
@@ -88,62 +121,43 @@ class FeishuSync:
             
             print(f"\n处理批次 {i//batch_size + 1}/{(len(items)-1)//batch_size + 1} ({len(batch)} 条)")
             
-            # 打印第一条记录作为示例
-            if i == 0:
-                print("示例数据:")
-                print(json.dumps(records[0], ensure_ascii=False, indent=2))
-            
-            # 这里需要手动调用飞书工具
-            # 由于环境限制，打印出调用命令供用户参考
-            print(f"\n请执行以下命令完成同步:")
-            print(f"openclaw feishu_bitable_app_table_record batch_create \\")
-            print(f"  --app_token {self.app_token} \\")
-            print(f"  --table_id {self.table_id} \\")
-            print(f"  --records '{json.dumps(records[:2], ensure_ascii=False)}'")
-            
-            total_success += len(batch)
+            # 调用 openclaw 工具批量创建
+            result = self._batch_create_records(records)
+            if result:
+                total_success += len(batch)
+                print(f"✅ 成功同步 {len(batch)} 条")
+            else:
+                print(f"❌ 批次失败")
         
-        print(f"\n✅ 准备完成，共 {total_success} 条记录")
-        print("注意：由于环境限制，请手动执行上述命令或配置好飞书授权后运行")
+        return total_success
+    
+    def _batch_create_records(self, records: List[Dict]) -> bool:
+        """使用 openclaw 工具批量创建记录"""
+        try:
+            cmd = [
+                "openclaw", "feishu_bitable_app_table_record", "batch_create",
+                "--app_token", self.app_token,
+                "--table_id", self.table_id,
+                "--records", json.dumps(records)
+            ]
+            
+            result = subprocess.run(cmd, capture_output=True, text=True)
+            
+            if result.returncode == 0:
+                return True
+            else:
+                print(f"API Error: {result.stderr[:500]}")
+                return False
+        except Exception as e:
+            print(f"Command error: {e}")
+            return False
 
 
-def test_connection():
-    """测试飞书连接"""
-    print("测试飞书连接...")
-    print(f"App Token: {FEISHU_CONFIG['app_token']}")
-    print(f"Table ID: {FEISHU_CONFIG['table_id']}")
-    print(f"View ID: {FEISHU_CONFIG.get('view_id', 'None')}")
-    
-    print("\n请确保:")
-    print("1. 已配置飞书授权 (openclaw feishu_oauth)")
-    print("2. 应用有 bitable:app 和 bitable:record 权限")
-    print("3. 表格结构和 docs/FEISHU_SETUP.md 中描述一致")
-
-
-def main():
-    """主函数"""
-    # 检查配置
-    if FEISHU_CONFIG['app_token'] == 'YOUR_APP_TOKEN_HERE':
-        print("错误：请先配置 app_token 和 table_id")
-        print("编辑 sync/config.py 填入你的飞书配置")
-        return
-    
-    # 测试连接
-    test_connection()
-    
-    # 读取采集的数据
-    data_path = os.path.join(os.path.dirname(__file__), '../web/public/data/news.json')
-    
-    if not os.path.exists(data_path):
-        print(f"\n错误：数据文件不存在: {data_path}")
-        print("请先运行爬虫: python crawler/main.py")
-        return
-    
-    with open(data_path, 'r', encoding='utf-8') as f:
-        data = json.load(f)
-    
-    items = [NewsItem(**item) for item in data['items']]
-    print(f"\n读取到 {len(items)} 条数据")
+def sync_to_feishu(data_path: str = None):
+    """主函数：同步数据到飞书"""
+    print("=" * 50)
+    print("开始同步到飞书多维表格")
+    print("=" * 50)
     
     # 初始化同步器
     sync = FeishuSync(
@@ -152,9 +166,40 @@ def main():
         view_id=FEISHU_CONFIG.get('view_id')
     )
     
-    # 批量同步
-    sync.batch_sync(items)
+    # 读取数据文件
+    if data_path is None:
+        data_path = os.path.join(os.path.dirname(__file__), '../web/public/data/news.json')
+    
+    if not os.path.exists(data_path):
+        print(f"❌ 错误：数据文件不存在: {data_path}")
+        print("请先运行爬虫: cd crawler && python main.py")
+        return 0
+    
+    with open(data_path, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+    
+    # 转换数据
+    items = []
+    for item_data in data.get('items', []):
+        try:
+            item = NewsItem(**item_data)
+            items.append(item)
+        except Exception as e:
+            print(f"跳过无效数据: {e}")
+    
+    print(f"\n读取到 {len(items)} 条有效数据")
+    
+    # 执行同步
+    success_count = sync.batch_sync(items)
+    
+    print(f"\n{'=' * 50}")
+    print(f"同步完成: {success_count}/{len(items)} 条成功")
+    print(f"{'=' * 50}")
+    
+    return success_count
 
 
 if __name__ == "__main__":
-    main()
+    # 支持命令行参数指定数据文件
+    data_file = sys.argv[1] if len(sys.argv) > 1 else None
+    sync_to_feishu(data_file)
