@@ -54,7 +54,7 @@ export default function Home() {
 
             {/* Feishu Link */}
             <a 
-              href="https://www.feishu.cn" 
+              href="https://my.feishu.cn/base/NgMCbk9aGaqrG9sgecmcjIgqnMd?table=tblEAuimN2Ie9789&view=vewGazu8y4" 
               target="_blank" 
               rel="noopener noreferrer"
               className="flex items-center gap-2 px-4 py-2 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 rounded-lg transition-colors text-sm font-medium border border-purple-500/30"
