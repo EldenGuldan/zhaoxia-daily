@@ -2,7 +2,8 @@
   "name": "zhaoxia-daily-root",
   "private": true,
   "scripts": {
-    "build": "cd web && npm install && npm run build",
-    "dev": "cd web && npm run dev"
+    "build": "pip3 install feedparser beautifulsoup4 aiohttp lxml --quiet 2>/dev/null || pip install feedparser beautifulsoup4 aiohttp lxml --quiet; python3 crawler/main.py; cd web && npm install && npm run build",
+    "dev": "cd web && npm run dev",
+    "crawl": "python3 crawler/main.py"
   }
 }
