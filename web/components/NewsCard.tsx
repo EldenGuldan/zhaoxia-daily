@@ -1,7 +1,7 @@
 import { NewsItem } from '../lib/types'
 import { format } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
-import { ExternalLink, ThumbsUp, Eye, MessageCircle, Tag } from 'lucide-react'
+import { ExternalLink, Tag } from 'lucide-react'
 
 interface NewsCardProps {
   item: NewsItem
@@ -63,29 +63,12 @@ export default function NewsCard({ item }: NewsCardProps) {
           {item.summary}
         </p>
 
-        {/* Source & Engagement */}
-        <div className="flex items-center justify-between pt-3 border-t border-slate-700/50">
+        {/* Source */}
+        <div className="flex items-center pt-3 border-t border-slate-700/50">
           <div className="flex items-center gap-1.5 text-xs text-slate-500">
             <span className="font-medium text-slate-300">{item.source}</span>
             <span>·</span>
             <span>{item.source_type}</span>
-          </div>
-
-          <div className="flex items-center gap-3 text-xs text-slate-500">
-            <span className="flex items-center gap-1">
-              <Eye className="w-3.5 h-3.5" />
-              {item.views >= 10000 ? `${(item.views / 10000).toFixed(1)}w` : item.views}
-            </span>
-            <span className="flex items-center gap-1">
-              <ThumbsUp className="w-3.5 h-3.5" />
-              {item.likes}
-            </span>
-            {item.comments > 0 && (
-              <span className="flex items-center gap-1">
-                <MessageCircle className="w-3.5 h-3.5" />
-                {item.comments}
-              </span>
-            )}
           </div>
         </div>
 
