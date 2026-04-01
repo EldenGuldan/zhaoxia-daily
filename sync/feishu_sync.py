@@ -57,7 +57,6 @@ class NewsItem:
         self.likes = kwargs.get('likes', 0)
         self.views = kwargs.get('views', 0)
         self.comments = kwargs.get('comments', 0)
-        self.engagement = kwargs.get('engagement', 0)
 
 
 class FeishuSync:

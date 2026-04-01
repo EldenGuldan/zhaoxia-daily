@@ -11,7 +11,6 @@ export interface NewsItem {
   likes: number
   views: number
   comments: number
-  engagement: number
 }
 
 export type ViewMode = 'community' | 'table'

@@ -124,7 +124,7 @@ export default function NewsContent({ initialData }: NewsContentProps) {
           <StatCard label="今日资讯" value={data.length} color="purple" />
           <StatCard label="AI 工具" value={data.filter(i => i.category === 'tool').length} color="fuchsia" />
           <StatCard label="行业新闻" value={data.filter(i => i.category === 'news').length} color="blue" />
-          <StatCard label="平均互动" value={data.length > 0 ? `${Math.round(data.reduce((a, b) => a + b.engagement, 0) / data.length)}+` : '0'} color="pink" />
+          <StatCard label="总浏览量" value={data.length > 0 ? `${Math.round(data.reduce((a, b) => a + b.views, 0) / 1000)}k` : '0'} color="pink" />
         </div>
 
         {/* Content */}

@@ -27,7 +27,6 @@ class NewsItem:
     likes: int
     views: int
     comments: int
-    engagement: int
 
 
 class QualityFilter:
@@ -201,8 +200,7 @@ class RSSCrawler:
                             published_at=pub_date,
                             likes=50,
                             views=500,
-                            comments=10,
-                            engagement=60
+                            comments=10
                         )
                         items.append(item)
                         
@@ -247,10 +245,10 @@ class NewsAggregator:
                 seen_urls.add(item.url)
                 unique_items.append(item)
         
-        # 按时间排序
-        unique_items.sort(key=lambda x: x.published_at, reverse=True)
+        # 按浏览量排序，取前20条
+        unique_items.sort(key=lambda x: x.views, reverse=True)
         
-        return unique_items[:20]  # 最多20条
+        return unique_items[:20]  # 只保留20条浏览量最多的
     
     def save(self, items: List[NewsItem], output_path: str):
         """保存到 JSON"""
