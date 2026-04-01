@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-飞书多维表格同步脚本 - 使用 openclaw 工具
+飞书多维表格同步脚本 - 直接 API 调用版
 将采集的新闻数据同步到飞书 Bitable
 """
 
 import json
 import os
 import sys
-import subprocess
+import requests
 from datetime import datetime
 from typing import List, Dict, Any
 
@@ -25,7 +25,7 @@ CATEGORY_OPTIONS = {
     "trend": "🔥 热点话题",
 }
 
-# 来源类型映射（标准化）
+# 来源类型映射
 SOURCE_TYPE_MAP = {
     "官方博客": "官方博客",
     "开源社区": "开源社区",
@@ -36,6 +36,10 @@ SOURCE_TYPE_MAP = {
     "AI社区": "AI社区",
     "企业新闻": "官方博客",
 }
+
+# 有效标签列表
+VALID_TAGS = ["大模型", "AI绘画", "AI编程", "视频生成", "AI音乐",
+              "AI搜索", "开源模型", "Agent", "新品发布", "社区热点"]
 
 
 class NewsItem:
@@ -59,25 +63,45 @@ class NewsItem:
 class FeishuSync:
     """飞书表格同步器"""
     
-    def __init__(self, app_token: str, table_id: str, view_id: str = None):
+    def __init__(self, app_token: str, table_id: str, access_token: str = None):
         self.app_token = app_token
         self.table_id = table_id
-        self.view_id = view_id
+        self.base_url = "https://open.feishu.cn/open-apis"
+        self.access_token = access_token
+    
+    def _make_request(self, method: str, endpoint: str, data: Dict = None) -> Dict:
+        """发送 API 请求"""
+        url = f"{self.base_url}{endpoint}"
+        headers = {
+            "Authorization": f"Bearer {self.access_token}",
+            "Content-Type": "application/json"
+        }
+        
+        try:
+            if method == "GET":
+                response = requests.get(url, headers=headers, timeout=30)
+            elif method == "POST":
+                response = requests.post(url, headers=headers, json=data, timeout=30)
+            elif method == "DELETE":
+                response = requests.delete(url, headers=headers, timeout=30)
+            else:
+                raise ValueError(f"不支持的方法: {method}")
+            
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            print(f"API 请求失败: {e}")
+            return {}
     
     def _convert_item_to_record(self, item: NewsItem) -> Dict[str, Any]:
         """将 NewsItem 转换为飞书记录格式"""
-        # 类别映射
         category_display = CATEGORY_OPTIONS.get(item.category, item.category)
-        
-        # 来源类型标准化
         source_type = SOURCE_TYPE_MAP.get(item.source_type, "AI社区")
         
-        # 标签过滤（只保留预定义的标签）
-        valid_tags = ["大模型", "AI绘画", "AI编程", "视频生成", "AI音乐", 
-                      "AI搜索", "开源模型", "Agent", "新品发布", "社区热点"]
-        filtered_tags = [tag for tag in item.tags if tag in valid_tags]
+        # 过滤标签
+        filtered_tags = [tag for tag in item.tags if tag in VALID_TAGS]
         
-        # 转换时间戳（毫秒）
+        # 转换时间戳
         try:
             published_at = item.published_at.replace('Z', '+00:00') if 'Z' in item.published_at else item.published_at
             timestamp_ms = int(datetime.fromisoformat(published_at).timestamp() * 1000)
@@ -87,10 +111,7 @@ class FeishuSync:
         return {
             "标题": item.title,
             "摘要": item.summary,
-            "链接": {
-                "text": "阅读原文",
-                "link": item.url
-            },
+            "链接": {"text": "阅读原文", "link": item.url},
             "来源": item.source,
             "来源类型": source_type,
             "类别": category_display,
@@ -108,10 +129,7 @@ class FeishuSync:
             return 0
         
         print(f"批量同步 {len(items)} 条记录到飞书表格...")
-        print(f"App Token: {self.app_token[:10]}...")
-        print(f"Table ID: {self.table_id}")
         
-        # 分批处理，每批 500 条（API 限制）
         batch_size = 500
         total_success = 0
         
@@ -121,64 +139,48 @@ class FeishuSync:
             
             print(f"\n处理批次 {i//batch_size + 1}/{(len(items)-1)//batch_size + 1} ({len(batch)} 条)")
             
-            # 调用 openclaw 工具批量创建
-            result = self._batch_create_records(records)
-            if result:
+            endpoint = f"/bitable/v1/apps/{self.app_token}/tables/{self.table_id}/records/batch_create"
+            result = self._make_request("POST", endpoint, {"records": records})
+            
+            if result.get("code") == 0:
                 total_success += len(batch)
                 print(f"✅ 成功同步 {len(batch)} 条")
             else:
-                print(f"❌ 批次失败")
+                print(f"❌ 批次失败: {result.get('msg', '未知错误')}")
         
         return total_success
-    
-    def _batch_create_records(self, records: List[Dict]) -> bool:
-        """使用 openclaw 工具批量创建记录"""
-        try:
-            cmd = [
-                "openclaw", "feishu_bitable_app_table_record", "batch_create",
-                "--app_token", self.app_token,
-                "--table_id", self.table_id,
-                "--records", json.dumps(records)
-            ]
-            
-            result = subprocess.run(cmd, capture_output=True, text=True)
-            
-            if result.returncode == 0:
-                return True
-            else:
-                print(f"API Error: {result.stderr[:500]}")
-                return False
-        except Exception as e:
-            print(f"Command error: {e}")
-            return False
 
 
-def sync_to_feishu(data_path: str = None):
-    """主函数：同步数据到飞书"""
+def sync_to_feishu(data_path: str = None, access_token: str = None):
+    """主函数"""
     print("=" * 50)
     print("开始同步到飞书多维表格")
     print("=" * 50)
     
-    # 初始化同步器
+    # 获取 access token
+    token = access_token or os.environ.get('FEISHU_ACCESS_TOKEN')
+    if not token:
+        print("\n⚠️  需要设置 FEISHU_ACCESS_TOKEN 环境变量")
+        print("\n请完成飞书授权后重试")
+        return 0
+    
     sync = FeishuSync(
         app_token=FEISHU_CONFIG['app_token'],
         table_id=FEISHU_CONFIG['table_id'],
-        view_id=FEISHU_CONFIG.get('view_id')
+        access_token=token
     )
     
-    # 读取数据文件
+    # 读取数据
     if data_path is None:
         data_path = os.path.join(os.path.dirname(__file__), '../web/public/data/news.json')
     
     if not os.path.exists(data_path):
         print(f"❌ 错误：数据文件不存在: {data_path}")
-        print("请先运行爬虫: cd crawler && python main.py")
         return 0
     
     with open(data_path, 'r', encoding='utf-8') as f:
         data = json.load(f)
     
-    # 转换数据
     items = []
     for item_data in data.get('items', []):
         try:
@@ -189,7 +191,6 @@ def sync_to_feishu(data_path: str = None):
     
     print(f"\n读取到 {len(items)} 条有效数据")
     
-    # 执行同步
     success_count = sync.batch_sync(items)
     
     print(f"\n{'=' * 50}")
@@ -200,6 +201,5 @@ def sync_to_feishu(data_path: str = None):
 
 
 if __name__ == "__main__":
-    # 支持命令行参数指定数据文件
     data_file = sys.argv[1] if len(sys.argv) > 1 else None
     sync_to_feishu(data_file)
